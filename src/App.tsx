@@ -1,33 +1,40 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import * as twgl from 'twgl.js'
+
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  function go() {
+    const canvas = document.getElementById('c') as HTMLCanvasElement;
+    const programInfo = twgl.createProgramInfo(canvas.getContext('webgl') as WebGLRenderingContext, ['vs', 'fs']);
+    const arrays = {
+      position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
+    }
+    const bufferInfo = twgl.createBufferInfoFromArrays(canvas.getContext('webgl') as WebGLRenderingContext, arrays);
+    function render(time: number) {
+      
+      twgl.resizeCanvasToDisplaySize(canvas);
+      const gl = canvas.getContext('webgl') as WebGLRenderingContext;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+      const uniforms = {
+        time: time * 0.001,
+        resolution: [gl.canvas.width, gl.canvas.height],
+      }
+      gl.useProgram(programInfo.program);
+      twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+      twgl.setUniforms(programInfo, uniforms);
+      twgl.drawBufferInfo(gl, bufferInfo);
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  }
+
+  setTimeout(go, 1000);
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <canvas id='c' />
     </>
   )
 }
